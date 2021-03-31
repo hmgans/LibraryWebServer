@@ -6,11 +6,36 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using LibraryWebServer;
 using LibraryWebServer.Models;
+using System.Runtime.CompilerServices;
+
+[assembly: InternalsVisibleTo("BasicUnitTests")]
 
 namespace LibraryWebServer.Controllers
 {
     public class HomeController : Controller
     {
+
+        protected Team89LibraryContext db;
+
+        public HomeController()
+        {
+            db = new Team89LibraryContext();
+        }
+
+        public void UseLibraryContext(Team89LibraryContext ctx)
+        {
+            db = ctx;
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                db.Dispose();
+            }
+            base.Dispose(disposing);
+        }
+
         // WARNING:
         // This very simple web server is designed to be as tiny and simple as possible
         // This is NOT the way to save user data.
@@ -103,7 +128,7 @@ namespace LibraryWebServer.Controllers
                                 Isbn = p.Isbn,
                                 Title = p.Title,
                                 Author = p.Author,
-                                Serial = b == null ? null : (uint?)b.Serial, //Might have a null value use Ternary
+                                Serial = b == null ? null : (uint?)b.Serial, // Might have a null value use Ternary
                                 Name = r.Name == null ? "" : r.Name // Might have null
                             };
                 return Json(query.ToArray());
@@ -139,7 +164,6 @@ namespace LibraryWebServer.Controllers
                                 Serial = b == null ? null : (uint?)b.Serial, //Might have a null value use Ternary
                             };
                 return Json(query.ToArray());
-
             }
         }
 
@@ -164,11 +188,7 @@ namespace LibraryWebServer.Controllers
 
                 db.CheckedOut.Add(book);
                 db.SaveChanges();
-
             }
-
-
-
 
             return Json(new { success = true });
         }
