@@ -97,7 +97,7 @@ namespace LibraryWebServer.Controllers
                             join c in db.CheckedOut on b.Serial equals c.Serial into inUse
                             from i in inUse.DefaultIfEmpty()
                             join u in db.Patrons on i.CardNum equals u.CardNum into result
-                            from r in result.DefaultIfEmpty()
+                            from r in result.DefaultIfEmpty() 
                             select new
                             {
                                 Isbn = p.Isbn,
@@ -123,7 +123,24 @@ namespace LibraryWebServer.Controllers
         public ActionResult ListMyBooks()
         {
             // TODO: Implement
-            return Json(null);
+            using (Team89LibraryContext db = new Team89LibraryContext())
+            {
+                var query = from p in db.Titles
+                            join g in db.Inventory on p.Isbn equals g.Isbn into books
+                            from b in books.DefaultIfEmpty()
+                            join c in db.CheckedOut on b.Serial equals c.Serial into inUse
+                            from i in inUse.DefaultIfEmpty()
+                            join u in db.Patrons on i.CardNum equals u.CardNum into result
+                            from r in result.DefaultIfEmpty() where r.CardNum == card 
+                            select new
+                            {
+                                Title = p.Title,
+                                Author = p.Author,
+                                Serial = b == null ? null : (uint?)b.Serial, //Might have a null value use Ternary
+                            };
+                return Json(query.ToArray());
+
+            }
         }
 
 
@@ -138,7 +155,19 @@ namespace LibraryWebServer.Controllers
         [HttpPost]
         public ActionResult CheckOutBook(int serial)
         {
-            // You may have to cast serial to a (uint)
+            using (Team89LibraryContext db = new Team89LibraryContext())
+            {
+                // You may have to cast serial to a (uint)
+                CheckedOut book = new CheckedOut();
+                book.Serial = (uint)serial;
+                book.CardNum = (uint)card;
+
+                db.CheckedOut.Add(book);
+                db.SaveChanges();
+
+            }
+
+
 
 
             return Json(new { success = true });
@@ -156,6 +185,17 @@ namespace LibraryWebServer.Controllers
         public ActionResult ReturnBook(int serial)
         {
             // You may have to cast serial to a (uint)
+            using (Team89LibraryContext db = new Team89LibraryContext())
+            {
+                // You may have to cast serial to a (uint)
+                CheckedOut book = new CheckedOut();
+                book.Serial = (uint)serial;
+                book.CardNum = (uint)card;
+
+                db.CheckedOut.Remove(book);
+                db.SaveChanges();
+
+            }
 
             return Json(new { success = true });
         }
